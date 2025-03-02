@@ -1,7 +1,6 @@
 datasets/
-callbacks/
+/callbacks/*
+!/callbacks/2024_12_21_06_27_16
 *.pt
 __pycache__/
 runs/
-result.jpg
-BraTS-PED-00003-00091-t1c.png
