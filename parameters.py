@@ -7,19 +7,28 @@ for more information
 """
 
 """General"""
-MODE = "training"
+MODE = "test"            # train, val, test, predict 
 SEED = 42
-MODEL = "yolo11x-seg"   # Choose between yolo11n-seg or yolo11x-seg
-                        # 11n is smallest, while 11x is biggest
+MODEL = "yolo11n-seg"
+
+DATASET = "t1c_dataset"
+                            # t1c_dataset for single modality
+                            # all_modality_dataset for all modality
+                            # stacked_dataset for three modality stacked into one image
 
 """Training"""
-LOAD_AND_TRAIN = False
 EPOCH = 1
-BEST_MODEL_DIR_TRAIN = "runs/segment/yolo11x_single_mod/weights/best.pt"
+BATCH = 16
+
+LOAD_AND_TRAIN = False
+BEST_MODEL_DIR_TRAIN = "yolo11n-seg_all_modality_dataset/weights/best.pt"
 
 """Validation"""
-BEST_MODEL_DIR_VAL = "runs/segment/yolo11x_single_mod/weights/best.pt"
+BEST_MODEL_DIR_VAL = "yolo11n-seg_all_modality_dataset/weights/best.pt"
 
 """Testing"""
-IMAGE_TO_TEST = "BraTS-PED-00004-00047"
-BEST_MODEL_DIR_TEST = "runs/segment/yolo11x_single_mod/weights/best.pt"
+BEST_MODEL_DIR_TEST = "yolo11n-seg_all_modality_dataset/weights/best.pt"
+
+"""Predict"""
+BEST_MODEL_DIR_PREDICT = "yolo11n-seg_all_modality_dataset/weights/best.pt"
+IMAGE_TO_TEST = "BraTS-PED-00003-00091-t1c.png"

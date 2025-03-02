@@ -3,12 +3,23 @@ import torch
 import os
 import csv
 import cv2 as cv
+import time
 
 # to change hyperparameters refer to
 # parameters.py 
 from parameters import *
 
 TIME = 0
+CURRENT_TIME = 0
+
+"""Helper Functions"""
+def CreateDir(folder_name):
+   if not os.path.exists(folder_name):
+       os.makedirs(folder_name)   
+
+def GetCurrentTime(): 
+    current_time = time.localtime()
+    return time.strftime("%Y_%m_%d_%H_%M_%S", current_time)
 
 """Define Custom Callbacks"""
 def PrintMemoryUsed(predictor):
@@ -33,7 +44,8 @@ def LogMetricMemorySpeed(trainer):
 
     # write csv_file to directory
     data = [{'epoch': epoch, 'mAP50-95': mAP, 'time': TIME, 'memory': memory_used}]
-    callback_dir = f"callbacks/csv_callbacks_{MODEL}_{MODE}.csv"
+    CreateDir(f"callbacks/{CURRENT_TIME}")
+    callback_dir = f"callbacks/{CURRENT_TIME}/csv_callbacks_{DATASET}_{MODEL}_{MODE}.csv"
     with open(callback_dir, 'a', newline='') as csvfile:
         fieldnames = ['epoch', 'mAP50-95', 'time', 'memory']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
@@ -42,43 +54,70 @@ def LogMetricMemorySpeed(trainer):
             writer.writeheader()
         writer.writerows(data)
 
-def TrainModel(mode):
+""""Main Runtime"""
+def RunYOLOv11Seg(mode):
+    global CURRENT_TIME
+    CURRENT_TIME = GetCurrentTime() 
+
     if mode == "train":
-        if not os.path.exists("callbacks"):
-            os.makedirs("callbacks")  
+        print("/\nStarting training...")
+       
+        CreateDir("callbacks")
 
-        # load pretrained model (recommended for training)
-        model = YOLO(f"{MODEL}.pt")
-
-        # if load and train
         if LOAD_AND_TRAIN: 
             model = YOLO(BEST_MODEL_DIR_TRAIN)
+        else: 
+            # load pretrained model (recommended for training)
+            model = YOLO(f"{MODEL}.pt")
 
         # add callback for the model
         model.add_callback("on_train_epoch_end", LogMetricMemorySpeed)
 
         # train the model
-        results = model.train(data="config.yaml", epochs=EPOCH, imgsz=240, seed=SEED)
+        results = model.train(data=f"./datasets/{DATASET}.yaml", 
+                              epochs=EPOCH, 
+                              imgsz=240, 
+                              seed=SEED, 
+                              batch=BATCH,
+                              plots=True,
+                              project=f"{MODE}_{MODEL}_{CURRENT_TIME}",
+                              name=f"{MODEL}_{DATASET}")
+        print(f"\nFinish training, please check your directory for folder named 'train-....")
+        
     elif mode == "val":
-        # load pretrained model (recommended for training)
-        model = YOLO(f"{MODEL}.pt")
+        print("/\nStarting validation...\n")
+        print(f"\nFetching weights from...{BEST_MODEL_DIR_VAL}\n")
         model = YOLO(BEST_MODEL_DIR_VAL)
-        metrics = model.val()
+        metrics = model.val(plots=True, 
+                            name=f"{MODE}_{MODEL}_{DATASET}")
+        print(f"\nmAP50-95: {metrics.seg.map}\n")
+        print(f"\nFinish validation, please check your directory for folder named 'val-....")
+
     elif mode == "test":
-        model = YOLO(f"{MODEL}.pt")
-        model = YOLO(BEST_MODEL_DIR_VAL)
+        print("\nStarting test...\n")
+        print(f"\nFetching weights from...{BEST_MODEL_DIR_TEST}\n")
+        model = YOLO(BEST_MODEL_DIR_TEST)
+        metrics = model.val(data=f"./datasets/{DATASET}_test.yaml",
+                            plots=True, 
+                            name=f"{MODE}_{MODEL}_{DATASET}"
+        )
+        print(f"\nmAP50-95: {metrics.seg.map}\n")
+        print(f"\nFinish testing, please check your directory for folder named 'test-....")
+    
+    elif mode == "predict":
+        print("\nStarting prediction...\n")
+        print(f"\nFetching weights from...{BEST_MODEL_DIR_PREDICT}\n")
+        model = YOLO(BEST_MODEL_DIR_PREDICT)
         model.add_callback("on_predict_end", PrintMemoryUsed)
-        results = model(f"dataset/images/test/{IMAGE_TO_TEST}.png")
+
+        results = model("BraTS-PED-00003-00091-t1c.png")
         
         # Save the prediction
         for result in results:
             result.save(filename="result.jpg")  # save to disk
 
+        print(f"\nFinish prediction, please check your directory for a file named 'results.jpg'")
+
 if __name__ == "__main__":
-    TrainModel(MODE)
-    if MODE == "test": 
-        print(f"\nFinished {MODE}, Check working directoy for 'result.jpg'\n")
-    elif MODE == "train":
-        print(f"\nFinished {MODE}, Check runs and callbacks folder in working directory\n")
-    else: 
-        print(f"\nFinished {MODE}, Check runs folder in working directory\n")
+    RunYOLOv11Seg(MODE)
+

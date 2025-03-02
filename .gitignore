@@ -1,4 +1,7 @@
-dataset/
+datasets/
 callbacks/
 *.pt
 __pycache__/
+runs/
+result.jpg
+BraTS-PED-00003-00091-t1c.png
