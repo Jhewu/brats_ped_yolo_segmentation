@@ -1,4 +1,7 @@
-datasets/
+/datasets/
+!/datasets/all_modality_dataset.yaml
+!/datasets/all_modality_dataset_test.yaml
+
 /callbacks/*
 !/callbacks/2024_12_21_06_27_16
 *.pt
