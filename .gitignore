@@ -12,3 +12,10 @@
 
 *.pt
 __pycache__/
+
+preprocessing/raw_files/
+preprocessing/t1c_dataset/
+preprocessing/t1n_dataset/
+preprocessing/t2f_dataset/
+preprocessing/t2w_dataset/
+preprocessing/stack_dataset/
