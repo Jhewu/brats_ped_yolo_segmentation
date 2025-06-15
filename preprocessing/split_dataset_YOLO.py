@@ -16,7 +16,7 @@ import shutil
 import threading
 
 """HYPERPARAMETERS"""
-DATASET_FOLDER = "raw_files"
+DATASET_FOLDER = "BraTS-PEDs2023_Training"
 DEST_FOLDER = "dataset_split"
 TRAIN_SPLIT = 0.7
 VAL_TEST_SPLIT = 0.15

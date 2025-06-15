@@ -24,23 +24,40 @@ def CreateDir(folder_name):
    if not os.path.exists(folder_name):
        os.makedirs(folder_name)   
 
-def BinarizeGT(input_dir, output_dir): 
+def BinarizeGT(input_dir, output_dir, save_as_np): 
     # input_dir is test, train, val
     gt_dir_list = os.listdir(input_dir)
 
     for gt_slice in gt_dir_list: 
         gt_dir = os.path.join(input_dir, gt_slice)
-        # load the file
+        
+        # Load the file
         slice = np.load(gt_dir)
-        # binarize based on the whole tumor
+        
+        # Binarize based on the whole tumor
         binary_mask = np.where(slice > 0, 1, 0)
-        # save the mask
-        gt_output = os.path.join(output_dir, gt_slice)
-        print(f"Saving to... {gt_output}")
-        np.save(gt_output, binary_mask)
+
+        if save_as_np:
+            # Save the mask in .npy
+            gt_output = os.path.join(output_dir, gt_slice)
+            np.save(gt_output, binary_mask)
+            print(f"Saving to... {gt_output}")
+
+        else: 
+            # Get the basename without the .npy extension
+            filename = os.path.basename(gt_dir).split(".")[0]
+
+            # Save the mask as .png
+            filename = f"{filename}.png"
+
+            # Scale image back to 0-255
+            binary_mask = binary_mask*255
+
+            gt_output = os.path.join(output_dir, filename)
+            cv.imwrite(gt_output, binary_mask.astype(np.uint8))
 
 """Main Runtime"""
-def GTBinarizer(): 
+def GTBinarizer(save_as_np=True): 
     for mod in MODALITY:
         gt_folder = f"{mod}/labels"
         DEST_FOLDER = f"binarized_{mod}/masks"
@@ -52,7 +69,7 @@ def GTBinarizer():
         gt_dir_list = os.listdir(gt_dir)
 
         # define a thread pool executor with a maximum numnber of workers
-        max_workers = 10 # adjust based on your syster's capabilities
+        max_workers = 5 # adjust based on your syster's capabilities
 
         # Create destinations
         for dataset_split in gt_dir_list:
@@ -63,8 +80,14 @@ def GTBinarizer():
             for split in gt_dir_list:
                 input_dir = os.path.join(gt_dir, split)
                 output_dir = os.path.join(DEST_FOLDER, split)
-                executor.submit(BinarizeGT, input_dir, output_dir)
+                executor.submit(BinarizeGT, input_dir, output_dir, save_as_np)
+
+        # for split in gt_dir_list:
+        #     input_dir = os.path.join(gt_dir, split)
+        #     output_dir = os.path.join(DEST_FOLDER, split)
+        #     BinarizeGT(input_dir, output_dir, save_as_np)
+
 
 if __name__ == "__main__": 
-    GTBinarizer()
+    GTBinarizer(save_as_np=False)
     print("\nFinish binarizing, please check your directory for mask\n")

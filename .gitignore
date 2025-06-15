@@ -18,4 +18,5 @@ preprocessing/t1c_dataset/
 preprocessing/t1n_dataset/
 preprocessing/t2f_dataset/
 preprocessing/t2w_dataset/
+preprocessing/BraTS-PEDs2023_Training/
 preprocessing/stack_dataset/
